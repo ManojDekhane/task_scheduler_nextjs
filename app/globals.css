@@ -1,0 +1,36 @@
+:root {
+  --bg: #0f172a;
+  --card: rgba(255, 255, 255, 0.08);
+  --text: #e5e7eb;
+  --accent: #38bdf8;
+  --danger: #f87171;
+  --radius: 16px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: radial-gradient(circle at top, #1e293b, #020617);
+  color: var(--text);
+  font-family: "Inter", system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: var(--text);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #38bdf8, #6366f1);
+  color: #020617;
+  font-weight: 600;
+}

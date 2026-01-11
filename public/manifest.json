@@ -1,0 +1,9 @@
+{
+  "name": "Task Scheduler",
+  "short_name": "Scheduler",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#38bdf8",
+  "gcm_sender_id": "482941778795" 
+}
