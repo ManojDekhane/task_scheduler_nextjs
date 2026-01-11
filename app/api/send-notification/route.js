@@ -1,4 +1,4 @@
-import admin from "@/lib/firebaseAdmin";
+import admin from "../../lib/firebaseAdmin";
 import { tokens } from "../save-token/route";
 
 export async function POST(req) {
