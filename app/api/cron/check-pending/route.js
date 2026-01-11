@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import { adminDB, adminMessaging } from "../../../lib/firebaseAdmin";
 
 export async function GET() {
