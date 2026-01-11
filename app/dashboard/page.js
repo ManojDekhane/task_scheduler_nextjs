@@ -4,6 +4,7 @@ import TaskForm from "../components/TaskForm";
 import TaskList from "../components/TaskList";
 import EnablePush from "../components/EnablePush";
 import NotificationPermission from "../components/NotificationPermission";
+import CheckPendingButton from "../components/CheckPendingButton";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState(() => {
@@ -39,6 +40,9 @@ export default function Dashboard() {
     <>
       <NotificationPermission />
       <EnablePush />
+      
+      <CheckPendingButton />
+
       <TaskForm onAdd={(t) => setTasks([...tasks, t])} />
       <TaskList
         tasks={tasks}
