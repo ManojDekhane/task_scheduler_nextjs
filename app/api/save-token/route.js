@@ -5,21 +5,39 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
-    const { token } = await req.json();
+    console.log("🔥 save-token API HIT");
+
+    console.log("ENV CHECK", {
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      email: process.env.FIREBASE_CLIENT_EMAIL,
+      keyExists: !!process.env.FIREBASE_PRIVATE_KEY,
+    });
+
+    const body = await req.json();
+    console.log("REQUEST BODY", body);
+
+    const { token } = body;
 
     if (!token) {
-      return NextResponse.json({ error: "No token provided" }, { status: 400 });
+      return NextResponse.json({ error: "No token" }, { status: 400 });
     }
 
-    // Save token to Firestore
     await adminDB.collection("fcmTokens").doc(token).set({
       token,
       createdAt: Date.now(),
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error saving token:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (err) {
+    console.error("❌ SAVE TOKEN ERROR", err);
+
+    return NextResponse.json(
+      {
+        error: "Internal Server Error",
+        message: err.message,
+        stack: err.stack,
+      },
+      { status: 500 }
+    );
   }
 }
