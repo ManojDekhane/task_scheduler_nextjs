@@ -1,5 +1,5 @@
 import admin from "../../lib/firebaseAdmin";
-import { tokens } from "../save-token/route";
+import { tokens } from "../../lib/tokens"; // <-- import shared module
 
 export async function POST(req) {
   const { title, body } = await req.json();
@@ -17,5 +17,5 @@ export async function POST(req) {
     )
   );
 
-  return Response.json({ success: true });
+  return new Response(JSON.stringify({ success: true }), { status: 200 });
 }
