@@ -1,20 +1,23 @@
 import { adminDB } from "../../lib/firebaseAdmin";
-import { addToken } from "../../lib/tokens";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
-  const { token } = await req.json();
+  try {
+    const { token } = await req.json();
 
-  if (!token) {
-    return NextResponse.json({ error: "No token" }, { status: 400 });
+    if (!token) {
+      return NextResponse.json({ error: "No token provided" }, { status: 400 });
+    }
+
+    // Save token to Firestore
+    await adminDB.collection("fcmTokens").doc(token).set({
+      token,
+      createdAt: Date.now(),
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error saving token:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
-
-  await adminDB.collection("fcmTokens").doc(token).set({
-    token,
-    createdAt: Date.now(),
-  });
-
-  addToken(token); // update shared in-memory array
-
-  return NextResponse.json({ success: true });
 }
