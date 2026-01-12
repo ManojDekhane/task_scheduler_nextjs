@@ -1,5 +1,7 @@
 "use client";
+
 import { useState } from "react";
+import { auth } from "../lib/firebaseClient";
 
 export default function CheckPendingButton() {
   const [loading, setLoading] = useState(false);
@@ -10,9 +12,21 @@ export default function CheckPendingButton() {
       setLoading(true);
       setResult(null);
 
-      const res = await fetch("/api/cron/check-pending");
-      const data = await res.json();
+      const user = auth.currentUser;
+      if (!user) {
+        setResult({ error: "User not logged in" });
+        return;
+      }
 
+      const res = await fetch("/api/cron/check-pending", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid, // ✅ SEND USER ID
+        }),
+      });
+
+      const data = await res.json();
       setResult(data);
     } catch (err) {
       setResult({ error: "Something went wrong" });
@@ -23,32 +37,15 @@ export default function CheckPendingButton() {
 
   return (
     <div style={{ marginBottom: "16px" }}>
-      <button
-        onClick={handleClick}
-        disabled={loading}
-        style={{
-          padding: "10px 16px",
-          backgroundColor: loading ? "#999" : "#000",
-          color: "#fff",
-          borderRadius: "6px",
-          cursor: loading ? "not-allowed" : "pointer",
-        }}
-      >
+      <button onClick={handleClick} disabled={loading}>
         {loading ? "Checking..." : "Check Pending Tasks"}
       </button>
 
-      {/* {result && (
-        <pre
-          style={{
-            marginTop: "8px",
-            background: "#f4f4f4",
-            padding: "8px",
-            fontSize: "12px",
-          }}
-        >
+      {result && (
+        <pre style={{ marginTop: "8px", fontSize: "12px" }}>
           {JSON.stringify(result, null, 2)}
         </pre>
-      )} */}
+      )}
     </div>
   );
 }

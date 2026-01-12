@@ -1,25 +1,28 @@
 "use client";
-
 import { useEffect, useState } from "react";
+import { auth } from "../lib/firebaseClient";
 import { firebaseApp } from "../lib/firebase";
 
 export default function EnablePush() {
   const [mounted, setMounted] = useState(false);
   const [supported, setSupported] = useState(false);
 
-  // Ensure component only renders AFTER hydration
   useEffect(() => {
     setMounted(true);
-
     import("firebase/messaging").then(({ isSupported }) => {
       isSupported().then(setSupported);
     });
   }, []);
 
-  // 🚫 Server & pre-hydration render NOTHING
   if (!mounted || !supported) return null;
 
   async function enableFCM() {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please login first");
+      return;
+    }
+
     const { getMessaging, getToken } = await import("firebase/messaging");
 
     const permission = await Notification.requestPermission();
@@ -39,15 +42,14 @@ export default function EnablePush() {
     await fetch("/api/save-token", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({
+        token,
+        userId: user.uid, // ✅ IMPORTANT
+      }),
     });
 
     alert("Push notifications enabled ✅");
   }
 
-  return (
-    <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
-      <button onClick={enableFCM}>Enable Push Notifications</button>
-    </div>
-  );
+  return <button onClick={enableFCM}>Enable Push Notifications</button>;
 }

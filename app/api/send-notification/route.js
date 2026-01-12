@@ -2,29 +2,31 @@ import { adminDB, adminMessaging } from "../../lib/firebaseAdmin";
 
 export async function POST(req) {
   try {
-    const { title, body } = await req.json();
+    const { title, body, userId } = await req.json();
 
-    // Fetch all tokens from Firestore
-    const snapshot = await adminDB.collection("fcmTokens").get();
-    const tokens = snapshot.docs.map(doc => doc.data().token);
-
-    if (!tokens.length) {
-      return new Response(JSON.stringify({ error: "No tokens found" }), { status: 400 });
+    if (!userId) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Send notifications
-    await Promise.all(
-      tokens.map(token =>
-        adminMessaging.send({
-          token,
-          notification: { title, body },
-        })
-      )
-    );
+    const snapshot = await adminDB
+      .collection("fcmTokens")
+      .where("userId", "==", userId)
+      .get();
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    const tokens = snapshot.docs.map(d => d.data().token);
+
+    if (!tokens.length) {
+      return Response.json({ message: "No tokens" });
+    }
+
+    await adminMessaging.sendEachForMulticast({
+      tokens,
+      notification: { title, body },
+    });
+
+    return Response.json({ success: true });
   } catch (error) {
-    console.error("Error sending notifications:", error);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
+    console.error(error);
+    return Response.json({ error: "Server error" }, { status: 500 });
   }
 }

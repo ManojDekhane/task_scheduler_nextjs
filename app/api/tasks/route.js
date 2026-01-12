@@ -1,14 +1,37 @@
 import { adminDB } from "../../lib/firebaseAdmin";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
-  const { title, deadline } = await req.json();
+  const { title, deadline, userId } = await req.json();
 
-  await adminDB.collection("tasks").add({
+  if (!title || !deadline || !userId) {
+    return NextResponse.json(
+      { error: "Missing fields" },
+      { status: 400 }
+    );
+  }
+
+  const ref = await adminDB.collection("tasks").add({
     title,
-    deadline: new Date(deadline), // timestamp
+    deadline,
+    userId,
     completed: false,
-    createdAt: new Date(),
+    createdAt: Date.now(), // ✅ ADD THIS
   });
 
-  return Response.json({ success: true });
+  return NextResponse.json({ id: ref.id });
+}
+
+
+export async function GET(req) {
+  const userId = req.nextUrl.searchParams.get("userId");
+
+  const snap = await adminDB
+    .collection("tasks")
+    .where("userId", "==", userId)
+    .get();
+
+  return NextResponse.json(
+    snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  );
 }

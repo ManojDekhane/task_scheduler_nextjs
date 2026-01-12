@@ -1,5 +1,7 @@
 "use client";
+
 import { useState } from "react";
+import { auth } from "../lib/firebaseClient";
 
 export default function TaskForm({ onAdd }) {
   const [title, setTitle] = useState("");
@@ -8,51 +10,46 @@ export default function TaskForm({ onAdd }) {
 
   async function submit(e) {
     e.preventDefault();
+
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please login first");
+      return;
+    }
+
     if (!title || !deadline) return;
 
+    setLoading(true);
+
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        deadline,
+        userId: user.uid,
+      }),
+    });
+
+    const data = await res.json();
+
     const task = {
-      id: Date.now(), // for local UI only
+      id: data.id,
       title,
       deadline,
       completed: false,
+      createdAt: Date.now(), // ✅ ADD THIS
     };
 
-    // 1️⃣ Update UI immediately (optimistic UI)
     onAdd(task);
-
-    // 2️⃣ Save to Firestore (server)
-    try {
-      setLoading(true);
-      await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          deadline,
-        }),
-      });
-    } catch (err) {
-      console.error("Failed to save task", err);
-    } finally {
-      setLoading(false);
-    }
 
     setTitle("");
     setDeadline("");
+    setLoading(false);
   }
 
   return (
-    <form
-      onSubmit={submit}
-      style={{
-        display: "flex",
-        gap: "12px",
-        background: "var(--card)",
-        padding: "20px",
-        borderRadius: "var(--radius)",
-        marginBottom: "24px",
-      }}
-    >
+    <form onSubmit={submit} style={{ display: "flex", gap: "12px" }}>
       <input
         placeholder="Task name"
         value={title}

@@ -1,53 +1,60 @@
 export const runtime = "nodejs";
 
 import { adminDB, adminMessaging } from "../../../lib/firebaseAdmin";
+import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function POST(req) {
   try {
-    console.log("🔔 check-pending API called");
+    const { userId } = await req.json();
 
-    // 1️⃣ Date range
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Missing userId" },
+        { status: 400 }
+      );
+    }
 
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
+    // const start = new Date();
+    // start.setHours(0, 0, 0, 0);
 
-    console.log("📅 Date range", start.toISOString(), end.toISOString());
+    // const end = new Date();
+    // end.setHours(23, 59, 59, 999);
 
-    // 2️⃣ Fetch pending tasks
+    const today = new Date().toISOString().split("T")[0];
+
+    // 🔥 ONLY USER TASKS
     const snapshot = await adminDB
       .collection("tasks")
-      .where("deadline", ">=", start)
-      .where("deadline", "<=", end)
+      .where("userId", "==", userId)
+      .where("deadline", "==", today)
       .where("completed", "==", false)
       .get();
 
-    console.log("📦 Tasks fetched:", snapshot.size);
-
     const count = snapshot.size;
 
-    if (count <= 3) {
-      console.log("ℹ️ Not enough tasks to notify");
-      return Response.json({ message: "No notification needed", count });
+    if (count === 0) {
+      return NextResponse.json({
+        message: "No pending tasks today",
+        count,
+      });
     }
 
-    // 3️⃣ Fetch FCM tokens
-    const tokenSnap = await adminDB.collection("fcmTokens").get();
+    // 🔔 Only this user's tokens
+    const tokenSnap = await adminDB
+      .collection("fcmTokens")
+      .where("userId", "==", userId)
+      .get();
 
-    console.log("📱 Token docs:", tokenSnap.size);
-
-    const tokens = tokenSnap.docs
-      .map((d) => d.data()?.token)
-      .filter(Boolean);
+    const tokens = tokenSnap.docs.map(d => d.data().token);
 
     if (!tokens.length) {
-      console.log("⚠️ No FCM tokens found");
-      return Response.json({ message: "No FCM tokens" });
+      return NextResponse.json({
+        message: "No tokens for this user",
+        count,
+      });
     }
 
-    // 4️⃣ Send notification
-    const response = await adminMessaging.sendEachForMulticast({
+    await adminMessaging.sendEachForMulticast({
       tokens,
       notification: {
         title: "Task Alert 🚨",
@@ -55,23 +62,11 @@ export async function GET() {
       },
     });
 
-    console.log("✅ Notification response:", response);
-
-    return Response.json({
-      success: true,
-      count,
-      successCount: response.successCount,
-      failureCount: response.failureCount,
-    });
-  } catch (error) {
-    console.error("❌ check-pending ERROR:", error);
-
-    return Response.json(
-      {
-        error: "check-pending failed",
-        message: error.message,
-        stack: error.stack,
-      },
+    return NextResponse.json({ success: true, count });
+  } catch (err) {
+    console.error("CHECK PENDING ERROR", err);
+    return NextResponse.json(
+      { error: err.message },
       { status: 500 }
     );
   }
