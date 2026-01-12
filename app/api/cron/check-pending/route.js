@@ -32,12 +32,13 @@ export async function POST(req) {
 
     const count = snapshot.size;
 
-    if (count === 0) {
+    if (count <= 3) {
       return NextResponse.json({
-        message: "No pending tasks today",
+        message: "Pending tasks are not more than 3. No notification sent.",
         count,
       });
     }
+
 
     // 🔔 Only this user's tokens
     const tokenSnap = await adminDB
