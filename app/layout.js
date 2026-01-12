@@ -1,5 +1,6 @@
 import "./globals.css";
 import Navbar from "./components/Navbar";
+import SWRegister from "./components/SWRegister";
 
 export const metadata = {
   title: "Task Scheduler",
@@ -11,6 +12,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
+        <SWRegister />
         <Navbar />
         <main
           style={{

@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AuthBar from "./AuthBar";
 
 export default function Navbar() {
   const path = usePathname();
