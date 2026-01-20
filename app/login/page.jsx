@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"; // ✅ ADD useEffect
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../lib/firebaseClient";
 import { useRouter } from "next/navigation";
+import { enablePush } from "../lib/enablePush";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,10 +26,12 @@ export default function Login() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      await enablePush();
       router.push("/dashboard"); // ✅ redirect after login
     } catch (err) {
       setError(err.message);
     }
+
   }
 
   return (

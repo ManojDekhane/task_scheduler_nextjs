@@ -26,7 +26,10 @@ export default function EnablePush() {
     const { getMessaging, getToken } = await import("firebase/messaging");
 
     const permission = await Notification.requestPermission();
-    if (permission !== "granted") return;
+    if (permission !== "granted") {
+      console.warn("❌ Notification permission denied");
+      return;
+    }
 
     const registration = await navigator.serviceWorker.register(
       "/firebase-messaging-sw.js"
